@@ -68,7 +68,7 @@ export type BetTypes = keyof PAYOUTS;
 
 const CHIP_DATA_KEY = "text";
 
-function ARRAY_EQUAL(a: number[], b: number[]) {
+function UNORDERED_ARRAY_EQUAL(a: number[], b: number[]) {
   return a.filter(ax => b.includes(ax)).length == a.length && b.filter(bx => a.includes(bx)).length == b.length;
 }
 
@@ -82,6 +82,8 @@ function Bet(props: {
   winsOn?: number[],
   onDrop?: (index: number) => void,
   placedBets?: PlacedBet[],
+  winningBets?: PlacedBet[],
+  roll?: number,
 }) {
   return <div
     onDrop={props.onDrop ? (ev) => {
@@ -105,8 +107,11 @@ function Bet(props: {
       justifyContent: "center",
       minWidth: 70,
       minHeight: 70,
+      outline: props.roll == props.name ? "10px solid gold" : undefined,
+      outlineOffset: -10,
     }}>
     {props.name}
+    {/* This is for PLACED BETS, only straight and other types currently. all other smaller inside bets arent done... */}
     <div style={{ display: "flex", flexDirection: "column-reverse" }}>
       {props.placedBets?.filter(b => {
         return b.type == "straight" && b.winsOn.includes(Number(props.name));
@@ -114,18 +119,34 @@ function Bet(props: {
     </div>
     <div style={{ display: "flex", flexDirection: "column-reverse" }}>
       {props.winsOn && props.placedBets?.filter(b => {
-        return b.type == props.type && ARRAY_EQUAL(b.winsOn, props.winsOn!);
+        return b.type == props.type && UNORDERED_ARRAY_EQUAL(b.winsOn, props.winsOn!);
       }).map(b => <Chip index={b.chipIndex} size={20} />)}
+    </div>
+
+    <div style={{ display: "flex", flexDirection: "column-reverse" }}>
+      {props.winsOn && props.winningBets?.filter(wb => {
+        return wb.type == props.type && UNORDERED_ARRAY_EQUAL(wb.winsOn, props.winsOn!);
+      }).map(wb => <div style={{ color: CHIP_COLORS[wb.chipIndex], marginTop: -20}}>+${(CHIP_VALUES[wb.chipIndex]) * (BET_PAYOUTS[wb.type] + 1)}</div>)}
     </div>
   </div>
 }
 
-function BetRow(props: { start: number, length: number, startColor?: string, onBet?: (betIndexes: number[], chipIndex: number) => void, placedBets?: PlacedBet[], }) {
+function BetRow(props: {
+  start: number,
+  length: number,
+  startColor?: string,
+  onBet?: (betIndexes: number[], chipIndex: number) => void,
+  placedBets?: PlacedBet[],
+  winningBets?: PlacedBet[],
+  roll?: number,
+}) {
   const content = [];
+  const { placedBets, winningBets, roll } = props;
+  const betProps = { placedBets, winningBets, roll };
   for (var i = 0; i < props.length; i++) {
     const num = props.start + i;
     content.push(<Bet
-      placedBets={props.placedBets}
+      {...betProps}
       name={num}
       onDrop={props.onBet ? (chipIndex) => { props.onBet?.([num], chipIndex); } : undefined}
     />)
@@ -135,29 +156,37 @@ function BetRow(props: { start: number, length: number, startColor?: string, onB
   </div>
 }
 
-function InsideBets(props: { onBet: (winsOnIndexes: number[], chipIndex: number) => void, placedBets?: PlacedBet[], }) {
+function InsideBets(props: {
+  onBet: (winsOnIndexes: number[], chipIndex: number) => void,
+  placedBets?: PlacedBet[],
+  winningBets?: PlacedBet[],
+  roll?: number,
+}) {
+  const { placedBets, winningBets, roll } = props;
+  const betProps = { placedBets, winningBets, roll };
   const rows = 3;
   const cols = 36 / rows;
-  const content = [<Bet name="0" />];
+  const content = [<Bet name="0" {...betProps} />];
   for (var i = 0; i < cols; i++) {
     if (i % 4 == 0) {
       content.push(<div style={{ width: 4, backgroundColor: "green" }}></div>)
     }
-    content.push(<BetRow placedBets={props.placedBets} start={i * rows + 1} length={rows} onBet={props.onBet} />)
+    content.push(<BetRow {...betProps} start={i * rows + 1} length={rows} onBet={props.onBet} />)
   }
   content.push(<div style={{ width: 4, backgroundColor: "green" }}></div>)
   return <div style={{ display: "inline-flex", flexDirection: "row", justifyContent: "center" }}>
     {content}
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <Bet placedBets={props.placedBets} name="2to1" type="Columns" winsOn={ROW_1} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_1, chipIndex) } : undefined} />
-      <Bet placedBets={props.placedBets} name="2to1" type="Columns" winsOn={ROW_2} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_2, chipIndex) } : undefined} />
-      <Bet placedBets={props.placedBets} name="2to1" type="Columns" winsOn={ROW_3} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_3, chipIndex) } : undefined} />
+      <Bet {...betProps} name="2to1" type="Columns" winsOn={ROW_1} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_1, chipIndex) } : undefined} />
+      <Bet {...betProps} name="2to1" type="Columns" winsOn={ROW_2} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_2, chipIndex) } : undefined} />
+      <Bet {...betProps} name="2to1" type="Columns" winsOn={ROW_3} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_3, chipIndex) } : undefined} />
     </div>
   </div>
 }
 
 const CHIP_VALUES = [1, 5, 25, 50, 100, 500, 1000];
-const CHIP_COLORS = ["white", "red", "blue", "orange", "grey"];
+const CHIP_COLORS = ["white", "red", "blue", "orange", "grey", "teal", "lightgreen"];
+const CHIP_TEXT_COLOR = ["black", "white", "white", "black", "white", "white", "black"];
 
 function Chip(props: {
   index: number,
@@ -175,7 +204,7 @@ function Chip(props: {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      color: "black",
+      color: CHIP_TEXT_COLOR[props.index],
       height: size,
       width: size,
       cursor: props.draggable ? "grab" : undefined,
@@ -189,14 +218,96 @@ function Chip(props: {
   </div>
 }
 
+function Or0(x?: number){
+  return x || 0;
+}
+
+function Equal0Undefined(a: number, b: number){
+  return Or0(a) == Or0(b);
+}
+
+function Minus0Undefined(a:number, b: number){
+  return Or0(a) - Or0(b)
+}
+
+// 0 and undefined are equivalent
+function DIFF_ARRAYS(a: number[], b:number[]){
+  const length = Math.max(a.length, b.length);
+  let diffs = 0;
+  for(let i = 0; i < length; i++){
+    if(!Equal0Undefined(a[i], b[i])){
+      diffs += Math.abs(Minus0Undefined(a[i], b[i]));
+    }
+  }
+
+  return diffs;
+}
+
 // This is gross lol
 function ChipArea(props: {
   chips: number[],
   onClick?: (index: number) => void,
   setChips?: (newChips: number[]) => void,
 }) {
+
+  const [currentChips, setCurrentChips] = React.useState([0,0,0,0,0,0,0,0,0,0,0]);
+
+  console.log(props.chips, currentChips);
+
+  const chipsChanging = DIFF_ARRAYS(currentChips, props.chips);
+  React.useEffect(()=>{
+    if(chipsChanging){
+      console.log(`Updating chips ${chipsChanging}`);
+      const newLocalChips = [...currentChips];
+
+      let incSize = 1;
+      if(chipsChanging > 10){
+        incSize = 5;
+      }
+      if(chipsChanging > 25){
+        incSize = 10;
+      }
+      if(chipsChanging > 50){
+        incSize = 25;
+      }
+
+      // go from bottom to top and add one at a time
+      for(let i = 10; i >= 0; i--){
+        if(Or0(currentChips[i]) > Or0(props.chips[i])){
+          newLocalChips[i] = Or0(newLocalChips[i]);
+          // min of the DIFF from 
+          // used to be --!
+          newLocalChips[i] -= Math.min(incSize, Or0(newLocalChips[i]) - Or0(props.chips[i]));
+          setTimeout(()=>{
+            setCurrentChips(newLocalChips);
+          }, 100);
+          return;
+        }
+        else if((currentChips[i]||0) < (props.chips[i]||0)){
+          newLocalChips[i] = newLocalChips[i] || 0;
+          //newLocalChips[i]++;
+          newLocalChips[i] += Math.min(incSize, Or0(props.chips[i]) - Or0(newLocalChips[i]) );
+          setTimeout(()=>{
+            setCurrentChips(newLocalChips);
+          }, 100);
+          return;
+        }
+      }
+    }
+    else {
+      console.log("DONE?");
+    }
+  }, [currentChips, props.chips, chipsChanging]);
+
+  // only show co0;
+  let maxIndex = 0;
+  currentChips.forEach((v,i) => {
+    if(v > 0){ maxIndex = i;}
+  });
+  console.log(maxIndex);
+
   return <div style={{ display: "flex", backgroundColor: "green", justifyContent: "center", height: 200, marginTop: 10 }}>
-    {props.chips.map((c, i) => {
+    {currentChips.filter((c,i)=> i <= maxIndex+1).map((c, i) => {
       let columns = [];
       let curCol = [];
       const stackSize = 10;
@@ -209,7 +320,7 @@ function ChipArea(props: {
           }}>{curCol}</div>);
           curCol = [];
         }
-        curCol.push(<Chip index={i} draggable={x == c - 1 || x % stackSize == stackSize - 1} />)
+        curCol.push(<Chip index={i} draggable={!chipsChanging && (x == c - 1 || x % stackSize == stackSize - 1)} />)
       }
       if (curCol.length > 0) {
         columns.push(<div style={{
@@ -238,6 +349,9 @@ function ChipArea(props: {
                 // we are trading in for a bigger coin
                 if (props.chips[chipIndex] * CHIP_VALUES[chipIndex] >= CHIP_VALUES[i]) {
                   const newChips = [...props.chips];
+                  newChips[i] = Or0(newChips[i]);
+                  newChips[chipIndex] = Or0(newChips[chipIndex]);
+
                   newChips[chipIndex] -= Math.floor(CHIP_VALUES[i] / CHIP_VALUES[chipIndex]);
                   newChips[i]++;
                   props.setChips?.(newChips);
@@ -248,6 +362,9 @@ function ChipArea(props: {
                 // this is probably OK, since we should be dragging it FROM the stack...
                 if (props.chips[chipIndex] > 0) {
                   const newChips = [...props.chips];
+                  newChips[i] = Or0(newChips[i]);
+                  newChips[chipIndex] = Or0(newChips[chipIndex]);
+
                   newChips[chipIndex]--;
                   newChips[i] += Math.floor(CHIP_VALUES[chipIndex] / CHIP_VALUES[i]);
                   props.setChips?.(newChips);
@@ -323,16 +440,20 @@ function WinsOnToType(winsOn: number[]): BetTypes {
   }
 }
 
+const DEFAULT_CHIPS = [10, 5, 1];
+
 function App() {
   const [hasSpun, setHasSpun] = React.useState(false);
   const [hasBet, setHasBet] = React.useState(false);
   const [roll, setRoll] = React.useState(0);
   const [bets, setBets] = React.useState<PlacedBet[]>([]);
+  const [chips, setChips] = React.useState([...DEFAULT_CHIPS]);
 
-  const [chips, setChips] = React.useState([10, 5, 1, 0, 0]);
+  const [winningBets, setShowWinnings] = React.useState<PlacedBet[]>([]);
+
   const totalMoney = chips.reduce((p, c, i) => {
     return p + (c * CHIP_VALUES[i]);
-  });
+  }, 0);
 
   const addBet = React.useCallback((bet: PlacedBet) => {
     setHasBet(true);
@@ -354,6 +475,8 @@ function App() {
         moveChip(chipIndex);
       },
       placedBets: bets,
+      winningBets,
+      roll,
     }
   }
 
@@ -367,8 +490,11 @@ function App() {
           const rollResult = RollWheel();
           setRoll(rollResult);
 
+          // hmm, we need to like... animate this?
+
           // check all bets
           const winningBets = bets.filter(b => b.winsOn.includes(rollResult));
+          setShowWinnings(winningBets);
           setBets([]);
 
           // ok pay them out!
@@ -380,14 +506,14 @@ function App() {
           setChips(newChips);
         }}>{roll}</button>
 
-        {!hasSpun ? <div style={{ color: "white", fontWeight: 300, fontSize: 18, marginLeft: 0, position: "absolute", right: 300 }}> {" <-- Click to spin the wheel"} </div> : undefined}
+        {!hasSpun ? <div style={{ color: "white", fontWeight: 300, fontSize: 18, marginLeft: 0, position: "absolute", left: "calc(50% + 60px)" }}> {" <-- Click to spin the wheel"} </div> : undefined}
 
-        <div style={{ backgroundColor: "green", fontSize: 24, padding: 10, color: "gold", marginLeft: "auto", right: 50, position: "absolute"  }}>
+        <div style={{ backgroundColor: "green", fontSize: 24, padding: 10, color: "gold", marginLeft: "auto", right: 50, position: "absolute" }}>
           $<span style={{ textShadow: "1px 2px rgba(0,0,0,.5)" }}>{totalMoney}</span>
         </div>
       </div>
       <div style={{ display: "inline-flex", flexDirection: "column" }}>
-        <InsideBets placedBets={bets} onBet={(winsOn, chipIndex) => {
+        <InsideBets placedBets={bets} roll={roll} winningBets={winningBets} onBet={(winsOn, chipIndex) => {
           moveChip(chipIndex);
           // OK we really need a way to IDENTIFY the different BETS. Like an ID or code.
           addBet({
