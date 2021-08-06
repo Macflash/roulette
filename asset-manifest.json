@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/roulette/static/css/main.208f31ce.chunk.css",
+    "main.js": "/roulette/static/js/main.606482d7.chunk.js",
+    "main.js.map": "/roulette/static/js/main.606482d7.chunk.js.map",
+    "runtime-main.js": "/roulette/static/js/runtime-main.54d2ab0e.js",
+    "runtime-main.js.map": "/roulette/static/js/runtime-main.54d2ab0e.js.map",
+    "static/js/2.30f08890.chunk.js": "/roulette/static/js/2.30f08890.chunk.js",
+    "static/js/2.30f08890.chunk.js.map": "/roulette/static/js/2.30f08890.chunk.js.map",
+    "static/js/3.1b20fd75.chunk.js": "/roulette/static/js/3.1b20fd75.chunk.js",
+    "static/js/3.1b20fd75.chunk.js.map": "/roulette/static/js/3.1b20fd75.chunk.js.map",
+    "index.html": "/roulette/index.html",
+    "static/css/main.208f31ce.chunk.css.map": "/roulette/static/css/main.208f31ce.chunk.css.map",
+    "static/js/2.30f08890.chunk.js.LICENSE.txt": "/roulette/static/js/2.30f08890.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.54d2ab0e.js",
+    "static/js/2.30f08890.chunk.js",
+    "static/css/main.208f31ce.chunk.css",
+    "static/js/main.606482d7.chunk.js"
+  ]
+}
