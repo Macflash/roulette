@@ -5,8 +5,8 @@ import './App.css';
 const EVEN_NUMBERS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36];
 const ODD_NUMBERS = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35];
 
-const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 21, 23, 25, 27, 30, 32, 34, 36];
-const GOLD_NUMBERS = [2, 4, 6, 8, 10, 11, 13, 15, 17, 19, 20, 22, 24, 26, 28, 29, 31, 33, 35];
+const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+const GOLD_NUMBERS = [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
 
 const FIRST_12 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const SECOND_12 = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
@@ -30,7 +30,7 @@ function GetColor(n: number | string) {
 function RollWheel(): number {
   const num = Math.floor(Math.random() * 37) - 1;
   if (num < 0 || num > 36) {
-    console.error("WOAH!!");
+    console.error("WOAH!! What are the odds??");
     return RollWheel();
   }
   return num;
@@ -96,7 +96,7 @@ function Bet(props: {
       cursor: props.onClick ? "pointer" : undefined,
       flex: props.flex,
       marginLeft: props.margin,
-      color: GetColor(props.name),
+      color: props.color || GetColor(props.name),
       textShadow: `1px 2px rgba(0,0,0,.7)`,
       backgroundColor: "green",
       border: "1px solid gold",
@@ -193,6 +193,7 @@ function Chip(props: {
 function ChipArea(props: {
   chips: number[],
   onClick?: (index: number) => void,
+  setChips?: (newChips: number[]) => void,
 }) {
   return <div style={{ display: "flex", backgroundColor: "green", justifyContent: "center", height: 200, }}>
     {props.chips.map((c, i) => {
@@ -227,17 +228,75 @@ function ChipArea(props: {
         borderLeft: "1px solid gold",
         borderRight: "1px solid gold", position: "relative"
       }}>
-        <div style={{ position: "absolute", top: 0, textAlign: "center", left: 0, right: 0, }}>${CHIP_VALUES[i]}</div>
+        <div
+        onDrop={ev => {
+          ev.preventDefault();
+          const chipIndex = Number(ev.dataTransfer.getData(CHIP_DATA_KEY));
+          if(chipIndex != i){
+            console.log(`Trading chip ${chipIndex} ($${CHIP_VALUES[chipIndex]}) for ${i} ($${CHIP_VALUES[i]})`);
+            if(chipIndex < i){
+              // we are trading in for a bigger coin
+              if(props.chips[chipIndex] * CHIP_VALUES[chipIndex] >= CHIP_VALUES[i]){
+                const newChips = [...props.chips];
+                newChips[chipIndex] -= Math.floor(CHIP_VALUES[i] / CHIP_VALUES[chipIndex]);
+                newChips[i]++;
+                props.setChips?.(newChips);
+              }
+            }
+            else {
+              // we are trading for a lower coin
+              // this is probably OK, since we should be dragging it FROM the stack...
+              if(props.chips[chipIndex] > 0){
+                const newChips = [...props.chips];
+                newChips[chipIndex]--;
+                newChips[i] += Math.floor(CHIP_VALUES[chipIndex] / CHIP_VALUES[i]);
+                props.setChips?.(newChips);
+              }
+            }
+          }
+        }}
+        onDragOver={ev=>{
+          const chipIndex = Number(ev.dataTransfer.getData(CHIP_DATA_KEY));
+          if(chipIndex != i){
+            console.log(`Trading chip ${chipIndex} ($${CHIP_VALUES[chipIndex]}) for ${i} ($${CHIP_VALUES[i]})`);
+            if(chipIndex < i){
+              // we are trading in for a bigger coin
+              if(props.chips[chipIndex] * CHIP_VALUES[chipIndex] >= CHIP_VALUES[i]){
+                ev.preventDefault();
+                ev.dataTransfer.dropEffect = "copy";
+              }
+            }
+            else {
+              // we are trading for a lower coin
+              // this is probably OK, since we should be dragging it FROM the stack...
+              if(props.chips[chipIndex] > 0){
+                ev.preventDefault();
+                ev.dataTransfer.dropEffect = "copy";
+              }
+            }
+          }
+        }}
+        style={{ position: "absolute", top: 0, textAlign: "center", left: 0, right: 0, }}>${CHIP_VALUES[i]}</div>
         {columns}
       </div>
-        {props.chips[i + 1] != undefined ?
+        {/* {props.setChips && props.chips[i + 1] != undefined ?
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", margin: 10, }}>
-            <div>
-              <button style={{ fontSize: 14 }} disabled={!(props.chips[i + 1] > 0)}>{"<--"}</button></div>
-            <div>
-              <button style={{ fontSize: 14 }} disabled={(props.chips[i] * CHIP_VALUES[i] < CHIP_VALUES[i + 1])}>{"-->"}</button></div>
-          </div>
-          : undefined}
+            {props.chips[i + 1] > 0 ? <div>
+              <button onClick={()=>{
+                const newChips = [...props.chips];
+                newChips[i+1]--;
+                newChips[i] += Math.floor(CHIP_VALUES[i+1] / CHIP_VALUES[i]);
+                props.setChips?.(newChips);
+              }} style={{ fontSize: 14 }}>{"<--"}</button></div> : undefined}
+            {(props.chips[i] * CHIP_VALUES[i] >= CHIP_VALUES[i + 1]) ? <div>
+              <button  onClick={()=>{
+                const newChips = [...props.chips];
+                newChips[i] -= Math.floor(CHIP_VALUES[i+1] / CHIP_VALUES[i]);
+                newChips[i+1]++;
+                props.setChips?.(newChips);
+              }} style={{ fontSize: 14 }}>{"-->"}</button></div>: undefined}
+          </div> 
+          : undefined} */}
       </>;
     })}
   </div>
@@ -324,7 +383,7 @@ function App() {
           <div style={{ flex: 1 }}></div>
           <Bet name="1-18" flex={2} margin={4}  {...createBetProps(ONE_TO_18, "Lows")} />
           <Bet name="EVEN" flex={2} margin={4} {...createBetProps(EVEN_NUMBERS, "Evens")} />
-          <Bet name="RED" flex={2} margin={4} {...createBetProps(RED_NUMBERS, "Reds")} />
+          <Bet name="RED" color="red" flex={2} margin={4} {...createBetProps(RED_NUMBERS, "Reds")} />
           <Bet name="GOLD" flex={2} margin={4}  {...createBetProps(GOLD_NUMBERS, "Blacks")} />
           <Bet name="ODD" flex={2} margin={4}  {...createBetProps(ODD_NUMBERS, "Odds")} />
           <Bet name="19-36" flex={2} margin={4}  {...createBetProps(NINETEEN_TO_36, "Highs")} />
@@ -355,7 +414,7 @@ function App() {
       <div style={{ backgroundColor: "green", fontSize: 24, padding: 10, color: "gold" }}>
         $<span style={{ textShadow: "1px 2px rgba(0,0,0,.5)" }}>{totalMoney}</span>
       </div>
-      <ChipArea chips={chips} />
+      <ChipArea chips={chips} setChips={setChips} />
     </div >
   );
 }
