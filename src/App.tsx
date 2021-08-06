@@ -149,7 +149,7 @@ function InsideBets(props: { onBet: (winsOnIndexes: number[], chipIndex: number)
   return <div style={{ display: "inline-flex", flexDirection: "row", justifyContent: "center" }}>
     {content}
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <Bet placedBets={props.placedBets} name="2to1"  type="Columns" winsOn={ROW_1} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_1, chipIndex) } : undefined} />
+      <Bet placedBets={props.placedBets} name="2to1" type="Columns" winsOn={ROW_1} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_1, chipIndex) } : undefined} />
       <Bet placedBets={props.placedBets} name="2to1" type="Columns" winsOn={ROW_2} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_2, chipIndex) } : undefined} />
       <Bet placedBets={props.placedBets} name="2to1" type="Columns" winsOn={ROW_3} onDrop={props.onBet ? (chipIndex) => { props.onBet(ROW_3, chipIndex) } : undefined} />
     </div>
@@ -195,7 +195,7 @@ function ChipArea(props: {
   onClick?: (index: number) => void,
   setChips?: (newChips: number[]) => void,
 }) {
-  return <div style={{ display: "flex", backgroundColor: "green", justifyContent: "center", height: 200, }}>
+  return <div style={{ display: "flex", backgroundColor: "green", justifyContent: "center", height: 200, marginTop: 10 }}>
     {props.chips.map((c, i) => {
       let columns = [];
       let curCol = [];
@@ -229,54 +229,54 @@ function ChipArea(props: {
         borderRight: "1px solid gold", position: "relative"
       }}>
         <div
-        onDrop={ev => {
-          ev.preventDefault();
-          const chipIndex = Number(ev.dataTransfer.getData(CHIP_DATA_KEY));
-          if(chipIndex != i){
-            console.log(`Trading chip ${chipIndex} ($${CHIP_VALUES[chipIndex]}) for ${i} ($${CHIP_VALUES[i]})`);
-            if(chipIndex < i){
-              // we are trading in for a bigger coin
-              if(props.chips[chipIndex] * CHIP_VALUES[chipIndex] >= CHIP_VALUES[i]){
-                const newChips = [...props.chips];
-                newChips[chipIndex] -= Math.floor(CHIP_VALUES[i] / CHIP_VALUES[chipIndex]);
-                newChips[i]++;
-                props.setChips?.(newChips);
+          onDrop={ev => {
+            ev.preventDefault();
+            const chipIndex = Number(ev.dataTransfer.getData(CHIP_DATA_KEY));
+            if (chipIndex != i) {
+              console.log(`Trading chip ${chipIndex} ($${CHIP_VALUES[chipIndex]}) for ${i} ($${CHIP_VALUES[i]})`);
+              if (chipIndex < i) {
+                // we are trading in for a bigger coin
+                if (props.chips[chipIndex] * CHIP_VALUES[chipIndex] >= CHIP_VALUES[i]) {
+                  const newChips = [...props.chips];
+                  newChips[chipIndex] -= Math.floor(CHIP_VALUES[i] / CHIP_VALUES[chipIndex]);
+                  newChips[i]++;
+                  props.setChips?.(newChips);
+                }
+              }
+              else {
+                // we are trading for a lower coin
+                // this is probably OK, since we should be dragging it FROM the stack...
+                if (props.chips[chipIndex] > 0) {
+                  const newChips = [...props.chips];
+                  newChips[chipIndex]--;
+                  newChips[i] += Math.floor(CHIP_VALUES[chipIndex] / CHIP_VALUES[i]);
+                  props.setChips?.(newChips);
+                }
               }
             }
-            else {
-              // we are trading for a lower coin
-              // this is probably OK, since we should be dragging it FROM the stack...
-              if(props.chips[chipIndex] > 0){
-                const newChips = [...props.chips];
-                newChips[chipIndex]--;
-                newChips[i] += Math.floor(CHIP_VALUES[chipIndex] / CHIP_VALUES[i]);
-                props.setChips?.(newChips);
+          }}
+          onDragOver={ev => {
+            const chipIndex = Number(ev.dataTransfer.getData(CHIP_DATA_KEY));
+            if (chipIndex != i) {
+              console.log(`Trading chip ${chipIndex} ($${CHIP_VALUES[chipIndex]}) for ${i} ($${CHIP_VALUES[i]})`);
+              if (chipIndex < i) {
+                // we are trading in for a bigger coin
+                if (props.chips[chipIndex] * CHIP_VALUES[chipIndex] >= CHIP_VALUES[i]) {
+                  ev.preventDefault();
+                  ev.dataTransfer.dropEffect = "copy";
+                }
+              }
+              else {
+                // we are trading for a lower coin
+                // this is probably OK, since we should be dragging it FROM the stack...
+                if (props.chips[chipIndex] > 0) {
+                  ev.preventDefault();
+                  ev.dataTransfer.dropEffect = "copy";
+                }
               }
             }
-          }
-        }}
-        onDragOver={ev=>{
-          const chipIndex = Number(ev.dataTransfer.getData(CHIP_DATA_KEY));
-          if(chipIndex != i){
-            console.log(`Trading chip ${chipIndex} ($${CHIP_VALUES[chipIndex]}) for ${i} ($${CHIP_VALUES[i]})`);
-            if(chipIndex < i){
-              // we are trading in for a bigger coin
-              if(props.chips[chipIndex] * CHIP_VALUES[chipIndex] >= CHIP_VALUES[i]){
-                ev.preventDefault();
-                ev.dataTransfer.dropEffect = "copy";
-              }
-            }
-            else {
-              // we are trading for a lower coin
-              // this is probably OK, since we should be dragging it FROM the stack...
-              if(props.chips[chipIndex] > 0){
-                ev.preventDefault();
-                ev.dataTransfer.dropEffect = "copy";
-              }
-            }
-          }
-        }}
-        style={{ position: "absolute", top: 0, textAlign: "center", left: 0, right: 0, }}>${CHIP_VALUES[i]}</div>
+          }}
+          style={{ position: "absolute", top: 0, textAlign: "center", left: 0, right: 0, }}>${CHIP_VALUES[i]}</div>
         {columns}
       </div>
         {/* {props.setChips && props.chips[i + 1] != undefined ?
@@ -324,6 +324,8 @@ function WinsOnToType(winsOn: number[]): BetTypes {
 }
 
 function App() {
+  const [hasSpun, setHasSpun] = React.useState(false);
+  const [hasBet, setHasBet] = React.useState(false);
   const [roll, setRoll] = React.useState(0);
   const [bets, setBets] = React.useState<PlacedBet[]>([]);
 
@@ -332,9 +334,8 @@ function App() {
     return p + (c * CHIP_VALUES[i]);
   });
 
-  const [amount, setBetAmount] = React.useState(1);
-
   const addBet = React.useCallback((bet: PlacedBet) => {
+    setHasBet(true);
     setBets([...bets, bet]);
   }, [bets, setBets]);
 
@@ -343,8 +344,6 @@ function App() {
     c[chipIndex] = Math.max(0, c[chipIndex] - 1);
     setChips(c);
   }
-
-  console.log(bets);
 
   function createBetProps(winsOn: number[], type: BetTypes) {
     return {
@@ -360,7 +359,33 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Roulette</h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", margin: "10px 50px" }}>
+        <h1 style={{ marginRight: "auto", position: "absolute", left: 50 }}>Roulette</h1>
+
+        <button title="Spin the wheel" style={{ borderRadius: 100, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", height: 90, width: 90, color: GetColor(roll) }} onClick={() => {
+          setHasSpun(true);
+          const rollResult = RollWheel();
+          setRoll(rollResult);
+
+          // check all bets
+          const winningBets = bets.filter(b => b.winsOn.includes(rollResult));
+          setBets([]);
+
+          // ok pay them out!
+          const newChips = [...chips];
+          for (const wonBet of winningBets) {
+            newChips[wonBet.chipIndex] += BET_PAYOUTS[wonBet.type] + 1; // 1 is YOUR chip which you get back.
+            // WOW, winning a bet pays a LOT for a number.
+          }
+          setChips(newChips);
+        }}>{roll}</button>
+
+        {!hasSpun ? <div style={{ color: "white", fontWeight: 300, fontSize: 18, marginLeft: 0, position: "absolute", right: 300 }}> {" <-- Click to spin the wheel"} </div> : undefined}
+
+        <div style={{ backgroundColor: "green", fontSize: 24, padding: 10, color: "gold", marginLeft: "auto", right: 50, position: "absolute"  }}>
+          $<span style={{ textShadow: "1px 2px rgba(0,0,0,.5)" }}>{totalMoney}</span>
+        </div>
+      </div>
       <div style={{ display: "inline-flex", flexDirection: "column" }}>
         <InsideBets placedBets={bets} onBet={(winsOn, chipIndex) => {
           moveChip(chipIndex);
@@ -392,29 +417,8 @@ function App() {
         </div>
       </div>
 
-      <div style={{ backgroundColor: "green", fontSize: 24, padding: 10, color: "gold" }}>
-        Roll: <span style={{ color: GetColor(roll), textShadow: "1px 2px rgba(0,0,0,.5)" }}>{roll}</span>
-      </div>
-      <button onClick={() => {
-        const rollResult = RollWheel();
-        setRoll(rollResult);
-
-        // check all bets
-        const winningBets = bets.filter(b => b.winsOn.includes(rollResult));
-        setBets([]);
-
-        // ok pay them out!
-        const newChips = [...chips];
-        for (const wonBet of winningBets) {
-          newChips[wonBet.chipIndex] += BET_PAYOUTS[wonBet.type] + 1; // 1 is YOUR chip which you get back.
-          // WOW, winning a bet pays a LOT for a number.
-        }
-        setChips(newChips);
-      }}>Roll</button>
-      <div style={{ backgroundColor: "green", fontSize: 24, padding: 10, color: "gold" }}>
-        $<span style={{ textShadow: "1px 2px rgba(0,0,0,.5)" }}>{totalMoney}</span>
-      </div>
       <ChipArea chips={chips} setChips={setChips} />
+      {!hasBet ? <div style={{ color: "white", fontWeight: 300, fontSize: 18 }}> {"Drag your chips to a square to place bets. Or drag between columns to exchange for different chips."} </div> : undefined}
     </div >
   );
 }
