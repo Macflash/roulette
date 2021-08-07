@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/roulette/static/css/main.208f31ce.chunk.css",
-    "main.js": "/roulette/static/js/main.210f8a71.chunk.js",
-    "main.js.map": "/roulette/static/js/main.210f8a71.chunk.js.map",
+    "main.js": "/roulette/static/js/main.8a511118.chunk.js",
+    "main.js.map": "/roulette/static/js/main.8a511118.chunk.js.map",
     "runtime-main.js": "/roulette/static/js/runtime-main.54d2ab0e.js",
     "runtime-main.js.map": "/roulette/static/js/runtime-main.54d2ab0e.js.map",
     "static/js/2.2bc71a7f.chunk.js": "/roulette/static/js/2.2bc71a7f.chunk.js",
@@ -17,6 +17,6 @@
     "static/js/runtime-main.54d2ab0e.js",
     "static/js/2.2bc71a7f.chunk.js",
     "static/css/main.208f31ce.chunk.css",
-    "static/js/main.210f8a71.chunk.js"
+    "static/js/main.8a511118.chunk.js"
   ]
 }
