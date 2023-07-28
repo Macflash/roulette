@@ -1,22 +1,40 @@
+:root {
+  --dark-green:#01431e;
+  --light-green: #016d29;
+  --brown: #3c1912;
+  --yellow: #f3c620;
+  --red: #e0080b;
+
+  --bg-color: #016d29; /* rgb(0, 80, 50); */
+}
+
 .App {
   text-align: center;
   font-weight: 700;
   font-size: 16pt;
-  background-color: green;
+  background-color: var(--bg-color);
   top:0; bottom: 0; position: absolute;
   left:0; right:0;
-  color: gold;
+  color: var(--yellow);
 }
 
 body { 
-  background-color: green;
+  background-color: var(--bg-color);
+}
+
+.red {
+  color: var(--red);
+}
+
+.yellow {
+  color: var(--yellow);
 }
 
 button {
   font-weight: 800;
-  color: gold;
-  background-color: green;
-  border: 8px double gold;
+  color: var(--yellow);
+  background-color: var(--bg-color);
+  border: 8px double var(--yellow);
   font-size: 24pt;
   padding: 12px 24px;
   cursor: pointer;
